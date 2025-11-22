@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空投收益計算機</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 550px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            flex-basis: 55%; /* 讓標籤佔更多空間 */
+            font-weight: 600;
+            font-size: 1em;
+            color: #555;
+        }
+
+        .input-group input[type="number"] {
+            flex-basis: 40%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input[type="number"]:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+        }
+
+        .input-group span.unit {
+            font-weight: 400;
+            color: #777;
+            margin-left: 5px;
+        }
+
+        /* 特別為開關設計的樣式 */
+        .toggle-switch {
+            flex-basis: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        #result-display {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #ffc107; /* 黃色邊框強調結果 */
+            border-radius: 8px;
+            background-color: #fffbe6;
+            text-align: center;
+        }
+
+        #result-display p {
+            margin: 0;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        #result-value {
+            font-size: 2em;
+            color: #dc3545; /* 紅色強調收益值 */
+            font-weight: 700;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>空投項目收益計算機</h1>
+        
+        <div class="input-group">
+            <label for="feeRate">你的手續費率：</label>
+            <input type="number" id="feeRate" value="0.075" min="0" step="0.0001">
+            <span class="unit">%</span>
+        </div>
+
+        <div class="input-group">
+            <label for="transactionAmount">完成交易額(正整數)：</label>
+            <input type="number" id="transactionAmount" value="10000" min="0" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="slippage">交易磨損(正負值)：</label>
+            <input type="number" id="slippage" value="-10" step="0.01">
+        </div>
+
+        <div class="input-group">
+            <label for="rewardTokens">獎勵顆數：</label>
+            <input type="number" id="rewardTokens" value="2000" min="0" step="0.0001">
+        </div>
+
+        <div class="input-group">
+            <label for="coinPrice">幣價：</label>
+            <input type="number" id="coinPrice" value="0.08" min="0" step="0.0001">
+        </div>
+
+        <div class="input-group">
+            <label>是否有40%返傭：</label>
+            <div class="toggle-switch">
+                <span style="margin-right: 10px; font-weight: normal;">否</span>
+                <label class="switch">
+                    <input type="checkbox" id="isRebate">
+                    <span class="slider"></span>
+                </label>
+                <span style="margin-left: 10px; font-weight: normal;">是</span>
+            </div>
+        </div>
+
+        <button onclick="calculateProfit()">計算收益</button>
+
+        <div id="result-display">
+            <p>最終收益</p>
+            <p id="result-value">點擊「計算收益」</p>
+        </div>
+
+        <script>
+            function calculateProfit() {
+                // 1. 獲取所有輸入值
+                const feeRateInput = document.getElementById('feeRate').value;
+                const transactionAmountInput = document.getElementById('transactionAmount').value;
+                const slippageInput = document.getElementById('slippage').value;
+                const rewardTokensInput = document.getElementById('rewardTokens').value;
+                const coinPriceInput = document.getElementById('coinPrice').value;
+                const isRebateChecked = document.getElementById('isRebate').checked;
+
+                // 2. 轉換為數字類型
+                const feeRate = parseFloat(feeRateInput);
+                const transactionAmount = parseFloat(transactionAmountInput);
+                const slippage = parseFloat(slippageInput);
+                const rewardTokens = parseFloat(rewardTokensInput);
+                const coinPrice = parseFloat(coinPriceInput);
+
+                // 3. 檢查基本有效性
+                if (isNaN(feeRate) || isNaN(transactionAmount) || isNaN(slippage) || isNaN(rewardTokens) || isNaN(coinPrice)) {
+                    document.getElementById('result-value').textContent = '輸入錯誤，請檢查所有欄位是否為數字！';
+                    document.getElementById('result-value').style.color = '#dc3545';
+                    return;
+                }
+                
+                // 4. 處理「是否返傭」開關
+                // 是: 帶入 0.6，否: 帶入 1
+                const rebateFactor = isRebateChecked ? 0.6 : 1;
+
+                // 5. 處理手續費率的單位轉換
+                // 用戶輸入的是「小數點%」(例如 0.075 %)，在計算中除以 100 轉成純小數
+                const actualFeeRate = feeRate / 100;
+
+                // 6. 執行公式計算
+                /*
+                公式為：
+                「獎勵顆數 * 幣價 + 交易磨損 - (交易額 * 手續費率 * 是否返傭)」
+                */
+                const profit = 
+                      (rewardTokens * coinPrice) + 
+                       slippage - 
+                      (transactionAmount * actualFeeRate * rebateFactor);
+
+                // 7. 顯示結果
+                // 為了貨幣顯示，我們將結果四捨五入到小數點後 4 位
+                const formattedProfit = profit.toFixed(4);
+                
+                document.getElementById('result-value').textContent = formattedProfit;
+                // 根據收益正負值顯示不同顏色
+                document.getElementById('result-value').style.color = profit >= 0 ? '#28a745' : '#dc3545';
+            }
+
+            // 初始執行一次，確保預設值正確
+            // 監聽所有輸入欄位和開關的變化，即時計算結果
+            document.addEventListener('DOMContentLoaded', () => {
+                calculateProfit();
+                
+                const inputs = document.querySelectorAll('.container input');
+                inputs.forEach(input => {
+                    input.addEventListener('input', calculateProfit);
+                });
+            });
+        </script>
+
+    </div>
+
+</body>
+</html>
