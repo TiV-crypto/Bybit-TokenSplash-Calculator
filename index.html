@@ -69,59 +69,6 @@
             margin-left: 5px;
         }
 
-        /* 開關樣式 */
-        .toggle-switch {
-            flex-basis: 40%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-
-        .switch input { 
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
         button {
             width: 100%;
             padding: 12px;
@@ -240,15 +187,9 @@
             </div>
 
             <div class="input-group">
-                <label>是否有40%返傭：</label>
-                <div class="toggle-switch">
-                    <span style="margin-right: 10px; font-weight: normal;">否</span>
-                    <label class="switch">
-                        <input type="checkbox" id="isRebate" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span style="margin-left: 10px; font-weight: normal;">是</span>
-                </div>
+                <label for="rebatePercentage">你的返傭額度：</label>
+                <input type="number" id="rebatePercentage" value="40" min="0" max="100" step="0.1">
+                <span class="unit">%</span>
             </div>
 
             <button onclick="calculateProfit()">計算收益</button>
@@ -266,7 +207,7 @@
                     const slippageInput = document.getElementById('slippage').value;
                     const rewardTokensInput = document.getElementById('rewardTokens').value;
                     const coinPriceInput = document.getElementById('coinPrice').value;
-                    const isRebateChecked = document.getElementById('isRebate').checked;
+                    const rebatePercentageInput = document.getElementById('rebatePercentage').value;
 
                     // 2. 轉換為數字類型
                     const feeRate = parseFloat(feeRateInput);
@@ -274,33 +215,29 @@
                     const slippage = parseFloat(slippageInput);
                     const rewardTokens = parseFloat(rewardTokensInput);
                     const coinPrice = parseFloat(coinPriceInput);
+                    const rebatePercentage = parseFloat(rebatePercentageInput);
 
                     // 3. 檢查基本有效性
-                    if (isNaN(feeRate) || isNaN(transactionAmount) || isNaN(slippage) || isNaN(rewardTokens) || isNaN(coinPrice)) {
+                    if (isNaN(feeRate) || isNaN(transactionAmount) || isNaN(slippage) || isNaN(rewardTokens) || isNaN(coinPrice) || isNaN(rebatePercentage)) {
                         document.getElementById('result-value').textContent = '輸入錯誤，請檢查所有欄位是否為數字！';
                         document.getElementById('result-value').style.color = '#dc3545';
                         return;
                     }
                     
-                    // 4. 處理「是否返傭」開關
-                    // 是: 帶入 0.6，否: 帶入 1
-                    const rebateFactor = isRebateChecked ? 0.6 : 1;
-
-                    // 5. 處理手續費率的單位轉換
+                    // 4. 處理手續費率的單位轉換
                     // 用戶輸入的是「小數點%」(例如 0.075 %)，在計算中除以 100 轉成純小數
                     const actualFeeRate = feeRate / 100;
 
-                    // 6. 執行公式計算
+                    // 5. 執行公式計算
                     /*
-                    公式為：
-                    「獎勵顆數 * 幣價 + 交易磨損 - (交易額 * 手續費率 * 是否返傭)」
+                    「獎勵顆數 * 幣價 + 交易磨損 - (交易額 * 手續費率 * (1 - 你的返傭額度 / 100))」
                     */
                     const profit = 
                         (rewardTokens * coinPrice) + 
                         slippage - 
-                        (transactionAmount * actualFeeRate * rebateFactor);
+                        (transactionAmount * actualFeeRate * (1 - rebatePercentage / 100));
 
-                    // 7. 顯示結果
+                    // 6. 顯示結果
                     // 為了貨幣顯示，我們將結果四捨五入到小數點後 4 位
                     const formattedProfit = profit.toFixed(4);
                     
